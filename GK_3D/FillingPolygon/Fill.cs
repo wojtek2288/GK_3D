@@ -116,7 +116,8 @@ namespace GK_3D.FillingPolygon
                     for (double x = AET[i].x; x <= AET[i + 1].x; x++)
                     {
                         if (x >= 0 && x < dirBitmap.Width && y >= 0 && y < dirBitmap.Height)
-                        { 
+                        {
+
                             float z = CalculateZ((int)x, (int)y, Polygon[0], Polygon[1], Polygon[2]);
 
                             if (z < zbufor[(int)x, (int)y])
