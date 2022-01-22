@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Linq;
 using System.Numerics;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace GK_3D.FillingPolygon
@@ -120,9 +121,14 @@ namespace GK_3D.FillingPolygon
 
                             float z = CalculateZ((int)x, (int)y, Polygon[0], Polygon[1], Polygon[2]);
 
-                            if (z < zbufor[(int)x, (int)y])
+                            bool change = false;
+
+                            change = z < zbufor[(int)x, (int)y];
+
+                            if (change)
                             {
                                 dirBitmap.SetPixel((int)x, (int)y, color);
+
                                 zbufor[(int)x, (int)y] = z;
                             }
                         }

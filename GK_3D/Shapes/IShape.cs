@@ -11,5 +11,7 @@ namespace GK_3D.Shapes
     internal interface IShape
     {
         public List<(Vector4 v1, Vector4 v2, Vector4 v3, Color col)> GetShape();
+        public void MoveByVector(Vector3 vec);
+        public Vector3 ShapeCenter { get; set; }
     }
 }

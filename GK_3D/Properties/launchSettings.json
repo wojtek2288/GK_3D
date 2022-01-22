@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "GK_3D": {
+      "commandName": "Project",
+      "nativeDebugging": false
+    }
+  }
+}

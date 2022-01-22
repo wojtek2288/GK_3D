@@ -40,7 +40,7 @@
             this.mainPicturebox.BackColor = System.Drawing.SystemColors.ButtonFace;
             this.mainPicturebox.Location = new System.Drawing.Point(0, 0);
             this.mainPicturebox.Name = "mainPicturebox";
-            this.mainPicturebox.Size = new System.Drawing.Size(787, 565);
+            this.mainPicturebox.Size = new System.Drawing.Size(1029, 691);
             this.mainPicturebox.TabIndex = 0;
             this.mainPicturebox.TabStop = false;
             this.mainPicturebox.Paint += new System.Windows.Forms.PaintEventHandler(this.mainPicturebox_Paint);
@@ -49,13 +49,12 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(784, 561);
+            this.ClientSize = new System.Drawing.Size(1026, 687);
             this.Controls.Add(this.mainPicturebox);
             this.MinimumSize = new System.Drawing.Size(800, 600);
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "GK 3D";
-            this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.Load += new System.EventHandler(this.Form1_Load);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Form1_KeyDown);
             this.Resize += new System.EventHandler(this.Form1_Resize);
