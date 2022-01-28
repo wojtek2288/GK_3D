@@ -20,14 +20,25 @@ namespace GK_3D.Matrices
                                         0, 0, 0, 1);
         }
 
+        public void Translate(Vector3 vec)
+        {
+            Matrix4x4 TranslationMatrix = new Matrix4x4(1, 0, 0, vec.X,
+                                                        0, 1, 0, vec.Y,
+                                                        0, 0, 1, vec.Z,
+                                                        0, 0, 0, 1);
+
+            this.Matrix = Matrix4x4.Multiply(TranslationMatrix, this.Matrix);
+        }
+
         public void RotateX(float angle)
         {
             this.angleX = angle;
-            this.Matrix = new Matrix4x4((float)(Math.Cos(Math.PI * angle / 180.0)), (float)(-1 * Math.Sin(Math.PI * angle / 180.0)), 0f, 0.1f,
-                                        (float)(Math.Sin(Math.PI * angle / 180.0)), (float)(Math.Cos(Math.PI * angle / 180.0)), 0f, 0.2f,
-                                        0f, 0f, 1f, 0.3f,
+            Matrix4x4 RotationMatrix = new Matrix4x4(1, 0, 0, 0,
+                                        0, (float)(Math.Cos(angle)), (float)(Math.Sin(angle)), 0,
+                                        0, (float)(-Math.Sin(angle)), (float)(Math.Cos(angle)), 0,
                                         0f, 0f, 0f, 1);
 
+            this.Matrix = Matrix4x4.Multiply(RotationMatrix, this.Matrix);
         }
 
         public void RotateY(float angle)

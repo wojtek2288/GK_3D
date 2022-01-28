@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GK_3D.Matrices;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -22,11 +23,13 @@ namespace GK_3D.Shapes
         private Vector3 Center;
         public float Radius;
         public Vector3 ShapeCenter { get => Center; set => Center = value; }
+        public ModelMatrix _ModelMatrix { get;}
 
         public Sphere(int meridians, int parallels, float r, Color col)
         {
             Center = new Vector3(0f, 0f, 0f);
             Radius = r;
+            this._ModelMatrix = new ModelMatrix();
 
             sphere = new List<(Vector4 v1, Vector4 v2, Vector4 v3, Color col)>();
             List<Vector4> vertices = new List<Vector4>();
@@ -93,14 +96,15 @@ namespace GK_3D.Shapes
 
         public void MoveByVector(Vector3 vec)
         {
-            for (int i = 0; i < sphere.Count; i++)
-            {
-                sphere[i] = (new Vector4(sphere[i].v1.X + vec.X, sphere[i].v1.Y + vec.Y, sphere[i].v1.Z + vec.Z, 1),
-                           new Vector4(sphere[i].v2.X + vec.X, sphere[i].v2.Y + vec.Y, sphere[i].v2.Z + vec.Z, 1),
-                           new Vector4(sphere[i].v3.X + vec.X, sphere[i].v3.Y + vec.Y, sphere[i].v3.Z + vec.Z, 1),
-                           sphere[i].col);
-            }
+            _ModelMatrix.Translate(vec);
             Center = new Vector3(Center.X + vec.X, Center.Y + vec.Y, Center.Z + vec.Z);
+        }
+
+        public void RotateX(float angle)
+        {
+            _ModelMatrix.Translate(-1 * Center);
+            _ModelMatrix.RotateX(angle);
+            _ModelMatrix.Translate(Center);
         }
     }
 }

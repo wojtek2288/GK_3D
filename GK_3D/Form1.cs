@@ -21,7 +21,6 @@ namespace GK_3D
     {
         private DirectBitmap PictureBoxBitmap { get; set; }
         private double[,] Zbufor { get; set; }
-        private ModelMatrix _ModelMatrix { get; set; }
         private ViewMatrix _ViewMatrix { get; set; }
         private ProjectionMatrix _ProjectionMatrix { get; set; }
         private (int X, int Y) TableDimensions { get; set; }
@@ -43,7 +42,6 @@ namespace GK_3D
             Shapes = new List<IShape>();
             Cameras = new List<ViewMatrix>();
 
-            _ModelMatrix = new ModelMatrix();
             _ProjectionMatrix = new ProjectionMatrix(1, 100, 60, 1);
 
             InitCameras(new Vector3(18f, 7.5f, 25f), new Vector3(5, 7.5f, 8));
@@ -85,13 +83,13 @@ namespace GK_3D
             {
                 foreach (var triangle in shape.GetShape())
                 {
-                    var ProjPoint1 = Utilities.ProjectPoint(triangle.v1, _ModelMatrix, _ViewMatrix, _ProjectionMatrix);
+                    var ProjPoint1 = Utilities.ProjectPoint(triangle.v1, shape._ModelMatrix, _ViewMatrix, _ProjectionMatrix);
                     var Point1 = Utilities.ConvertToPictureBox(ProjPoint1, mainPicturebox);
 
-                    var ProjPoint2 = Utilities.ProjectPoint(triangle.v2, _ModelMatrix, _ViewMatrix, _ProjectionMatrix);
+                    var ProjPoint2 = Utilities.ProjectPoint(triangle.v2, shape._ModelMatrix, _ViewMatrix, _ProjectionMatrix);
                     var Point2 = Utilities.ConvertToPictureBox(ProjPoint2, mainPicturebox);
 
-                    var ProjPoint3 = Utilities.ProjectPoint(triangle.v3, _ModelMatrix, _ViewMatrix, _ProjectionMatrix);
+                    var ProjPoint3 = Utilities.ProjectPoint(triangle.v3, shape._ModelMatrix, _ViewMatrix, _ProjectionMatrix);
                     var Point3 = Utilities.ConvertToPictureBox(ProjPoint3, mainPicturebox);
 
                     Fill.FillPolygon(new List<Vector3>() { Point1, Point2, Point3 }, PictureBoxBitmap, triangle.col, Zbufor);
@@ -130,6 +128,7 @@ namespace GK_3D
             else if (MovingBall.ShapeCenter.Y + MovingBall.Radius + BallMove.Y > TableDimensions.Y || MovingBall.ShapeCenter.Y + MovingBall.Radius + BallMove.Y < 0)
                 BallMove.Y *= -1f;
 
+            //Shapes[0].RotateX(0.01f);
             MovingBall.MoveByVector(BallMove);
             Cameras[1].ChangeCameraTarget(MovingBall.ShapeCenter);
             Cameras[2].ChangeCameraPosition(new Vector3(Cameras[2]._CameraPosition.X + BallMove.X, Cameras[2]._CameraPosition.Y + BallMove.Y, Cameras[2]._CameraPosition.Z + BallMove.Z));

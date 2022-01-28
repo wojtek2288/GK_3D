@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GK_3D.Matrices;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -13,10 +14,12 @@ namespace GK_3D.Shapes
         private List<(Vector4 v1, Vector4 v2, Vector4 v3, Color col)> cube { get; set; }
         private Vector3 Center;
         public Vector3 ShapeCenter { get => Center; set => Center = value; }
+        public ModelMatrix _ModelMatrix { get;}
 
         public Rectangle(float x, float y, float z, Color UpColor, Color SidesColor)
         {
-            this.Center = new Vector3(0.5f, 5f, 0.5f);
+            this.Center = new Vector3(x/2, y/2, z/2);
+            this._ModelMatrix = new ModelMatrix();
 
             cube = new List<(Vector4 v1, Vector4 v2, Vector4 v3, Color col)>();
 
@@ -47,13 +50,7 @@ namespace GK_3D.Shapes
 
         public void MoveByVector(Vector3 vec)
         {
-            for(int i = 0; i < cube.Count; i++)
-            {
-                cube[i] = (new Vector4(cube[i].v1.X + vec.X, cube[i].v1.Y + vec.Y, cube[i].v1.Z + vec.Z, 1),
-                           new Vector4(cube[i].v2.X + vec.X, cube[i].v2.Y + vec.Y, cube[i].v2.Z + vec.Z, 1),
-                           new Vector4(cube[i].v3.X + vec.X, cube[i].v3.Y + vec.Y, cube[i].v3.Z + vec.Z, 1),
-                           cube[i].col);
-            }
+            _ModelMatrix.Translate(vec);
 
             ShapeCenter = new Vector3(Center.X + vec.X, Center.Y + vec.Y, Center.Z + vec.Z); 
         }
@@ -61,6 +58,13 @@ namespace GK_3D.Shapes
         public List<(Vector4 v1, Vector4 v2, Vector4 v3, Color col)> GetShape()
         {
             return cube;
+        }
+
+        public void RotateX(float angle)
+        {
+            _ModelMatrix.Translate(-1 * Center);
+            _ModelMatrix.RotateX(_ModelMatrix.angleX + angle);
+            _ModelMatrix.Translate(Center);
         }
     }
 }
