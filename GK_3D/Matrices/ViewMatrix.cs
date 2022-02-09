@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -60,6 +61,7 @@ namespace GK_3D.Matrices
                                                      xAxis.Y, yAxis.Y, zAxis.Y, this._CameraPosition.Y,
                                                      xAxis.Z, yAxis.Z, zAxis.Z, this._CameraPosition.Z,
                                                      0f, 0f, 0f, 1f);
+            
 
             if (Matrix4x4.Invert(invertedMatrix, out Matrix4x4 res) == true)
                 Matrix = res;

@@ -1,4 +1,5 @@
 ﻿using GK_3D.DirBitmap;
+using GK_3D.Lights;
 using GK_3D.Utils;
 using System;
 using System.Collections.Generic;
@@ -37,8 +38,41 @@ namespace GK_3D.FillingPolygon
             return z;
         }
 
-        public static void FillPolygon(List<Vector3> Polygon, DirectBitmap dirBitmap, Color color, double[,] zbufor)
+        public static Vector3 CalculateNormal(List<Vector3> Triangle)
         {
+            var dir = Vector3.Cross(Triangle[1] - Triangle[0], Triangle[2] - Triangle[0]);
+            var norm = Vector3.Normalize(dir);
+
+            return norm;
+        }
+
+        public static void FillPolygon(List<Vector3> Polygon, DirectBitmap dirBitmap, Color color, double[,] zbufor, Vector3 Normal, List<ILight> Lights, Vector3 CameraPos, int shading = 0)
+        {
+            Color[] InterpolatedColors = new Color[3];
+            Color flatColor = Color.White;
+            float triangleDenominator = 1;
+
+            if (shading == 0)
+            {
+                float x1 = Polygon[0].X, y1 = Polygon[0].Y;
+                float x2 = Polygon[1].X, y2 = Polygon[1].Y;
+                float x3 = Polygon[2].X, y3 = Polygon[2].Y;
+
+                triangleDenominator = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3);
+
+                if (triangleDenominator == 0)
+                    triangleDenominator = 1;
+
+                for (int i = 0; i < 3; i++)
+                {
+                    InterpolatedColors[i] = PixelColoring.ColorPixel(Polygon[i], Normal, Lights, color, CameraPos);
+                }
+            }
+            else if(shading == 2)
+            {
+                flatColor = PixelColoring.ColorPixel(Polygon[0], Normal, Lights, color, CameraPos);
+            }
+
             var sortedVertices = Polygon.ConvertAll(v => v);
             sortedVertices.Sort((a, b) =>
             {
@@ -127,7 +161,21 @@ namespace GK_3D.FillingPolygon
 
                             if (change)
                             {
-                                dirBitmap.SetPixel((int)x, (int)y, color);
+                                Color col;
+                                if(shading == 0)
+                                {
+                                    col = PixelColoring.ColorInterpolatedPixel(new Vector3((float)x, (float)y, (float)z), InterpolatedColors, Polygon, triangleDenominator);
+                                }
+                                else if(shading == 1)
+                                {
+                                    col = PixelColoring.ColorPixel(new Vector3((float)x, (float)y, (float)z), Normal, Lights, color, CameraPos);
+                                }
+                                else
+                                {
+                                    col = flatColor;
+                                }
+
+                                dirBitmap.SetPixel((int)x, (int)y, col);
 
                                 zbufor[(int)x, (int)y] = z;
                             }

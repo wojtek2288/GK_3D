@@ -1,5 +1,6 @@
 ﻿using GK_3D.DirBitmap;
 using GK_3D.FillingPolygon;
+using GK_3D.Lights;
 using GK_3D.Matrices;
 using GK_3D.Shapes;
 using GK_3D.Utils;
@@ -28,7 +29,12 @@ namespace GK_3D
         private Vector3 BallMove;
         private List<ViewMatrix> Cameras;
         private List<IShape> Shapes;
+        private List<ILight> Lights;
         private Sphere MovingBall;
+        private Shapes.Rectangle RotatingCube;
+        private ReflectorLight reflector;
+        private int shading;
+        private float angleZ;
         public Form1()
         {
             InitializeComponent();
@@ -38,8 +44,11 @@ namespace GK_3D
         {
             PictureBoxBitmap = new DirectBitmap(mainPicturebox.Width, mainPicturebox.Height);
             mainPicturebox.Image = PictureBoxBitmap.Bitmap;
+            shading = 0;
+            angleZ = 0;
 
             Shapes = new List<IShape>();
+            Lights = new List<ILight>();
             Cameras = new List<ViewMatrix>();
 
             _ProjectionMatrix = new ProjectionMatrix(1, 100, 60, 1);
@@ -49,24 +58,37 @@ namespace GK_3D
             Zbufor = new double[mainPicturebox.Width, mainPicturebox.Height];
             Utilities.SetZbufor(Zbufor);
 
-            Shapes.Rectangle table = new Shapes.Rectangle(10, 15, 8, Color.Green, Color.SaddleBrown);
+            Shapes.Rectangle table = new Shapes.Rectangle(10, 15, 8, Color.Green, Color.Green);
+            Shapes.Rectangle cube = new Shapes.Rectangle(1, 1, 1, Color.Red, Color.Red);
+            RotatingCube = cube;
             TableDimensions = (10, 15);
 
             Sphere sphere = new Sphere(10, 10, 0.2f, Color.White);
 
             sphere.MoveByVector(new Vector3(5f, 7.5f, 8.2f));
+            cube.MoveByVector(new Vector3(8f, 12f, 8.5f));
 
             MovingBall = sphere;
             Shapes.Add(table);
             Shapes.Add(sphere);
+            Shapes.Add(cube);
+
+            PointLight light1 = new PointLight(new Vector4(5, 5f, 35, 1), Color.LightYellow);
+            PointLight light2 = new PointLight(new Vector4(5, 10f, 35, 1), Color.LightYellow);
+            ReflectorLight refLight = new ReflectorLight(new Vector4(5f, 7.7f, 8.1f, 1), Vector4.Normalize(new Vector4(5f, 7.7f, 8.1f, 1)), Color.LightYellow);
+            Lights.Add(light1);
+            Lights.Add(light2);
+            Lights.Add(refLight);
+
+            reflector = refLight;
 
             InitStationaryBalls();
             InitSidesOfTable();
 
-            BallMove = new Vector3(0.02f, 0.05f, 0f);
+            BallMove = new Vector3(-0.1f, 0.12f, 0f);
             System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
 
-            timer.Interval = 10;
+            timer.Interval = 50;
             timer.Tick += OnTimedEvent;
             timer.Start();
 
@@ -79,10 +101,42 @@ namespace GK_3D
             g.Clear(Color.Black);
             Utilities.SetZbufor(Zbufor);
 
+            var ProjCamera = Utilities.ProjectPoint(new Vector4(Cameras[CurrentCamera]._CameraPosition.X - 0.01f, Cameras[CurrentCamera]._CameraPosition.Y, Cameras[CurrentCamera]._CameraPosition.Z, 1),
+                new ModelMatrix(), _ViewMatrix, _ProjectionMatrix);
+            var Camera = Utilities.ConvertToPictureBox(ProjCamera, mainPicturebox);
+
+            foreach (var light in Lights)
+            {
+                var ProjLight = Utilities.ProjectPoint(light.LightPos, light._ModelMatrix, _ViewMatrix, _ProjectionMatrix);
+                var Light = Utilities.ConvertToPictureBox(ProjLight, mainPicturebox);
+
+                if (light.isReflector)
+                {
+                    var ProjDir = Utilities.ProjectPoint(light.RotatedDir, light._ModelMatrix, _ViewMatrix, _ProjectionMatrix);
+                    var Dir = Utilities.ConvertToPictureBox(ProjDir, mainPicturebox);
+                    Dir = Vector3.Normalize(Dir);
+
+                    light.ProcessedDir = Dir;
+                }
+
+                light.ProcessedPos = Light;
+            }
+
             foreach (var shape in Shapes)
             {
+                Color col = Color.Black;
+                if(shading == 2)
+                {
+                    var ProjNormal = Utilities.ProjectPoint(shape.GetShape()[0].normal, shape._ModelMatrix, _ViewMatrix, _ProjectionMatrix);
+                    var Normal = Utilities.ConvertToPictureBox(ProjNormal, mainPicturebox);
+                    Normal = Vector3.Normalize(Normal); 
+                }
                 foreach (var triangle in shape.GetShape())
                 {
+                    var ProjNormal = Utilities.ProjectPoint(triangle.normal, shape._ModelMatrix, _ViewMatrix, _ProjectionMatrix);
+                    var Normal = Utilities.ConvertToPictureBox(ProjNormal, mainPicturebox);
+                    Normal = Vector3.Normalize(Normal);
+
                     var ProjPoint1 = Utilities.ProjectPoint(triangle.v1, shape._ModelMatrix, _ViewMatrix, _ProjectionMatrix);
                     var Point1 = Utilities.ConvertToPictureBox(ProjPoint1, mainPicturebox);
 
@@ -92,7 +146,7 @@ namespace GK_3D
                     var ProjPoint3 = Utilities.ProjectPoint(triangle.v3, shape._ModelMatrix, _ViewMatrix, _ProjectionMatrix);
                     var Point3 = Utilities.ConvertToPictureBox(ProjPoint3, mainPicturebox);
 
-                    Fill.FillPolygon(new List<Vector3>() { Point1, Point2, Point3 }, PictureBoxBitmap, triangle.col, Zbufor);
+                    Fill.FillPolygon(new List<Vector3>() { Point1, Point2, Point3 }, PictureBoxBitmap, triangle.col, Zbufor, Normal, Lights, Camera, shading);
                 }
             }
         }
@@ -119,6 +173,30 @@ namespace GK_3D
                 _ViewMatrix = Cameras[CurrentCamera];
                 mainPicturebox.Refresh();
             }
+            else if(e.KeyCode == Keys.Space)
+            {
+                shading++;
+                if (shading == 3)
+                    shading = 0;
+                mainPicturebox.Refresh();
+            }
+            else if(e.KeyCode == Keys.W)
+            {
+                Cameras[CurrentCamera].ChangeCameraPosition(new Vector3(Cameras[CurrentCamera]._CameraPosition.X, Cameras[CurrentCamera]._CameraPosition.Y, Cameras[CurrentCamera]._CameraPosition.Z + 0.1f));
+            }
+            else if(e.KeyCode == Keys.A)
+            {
+                Cameras[CurrentCamera].ChangeCameraPosition(new Vector3(Cameras[CurrentCamera]._CameraPosition.X, Cameras[CurrentCamera]._CameraPosition.Y - 0.1f, Cameras[CurrentCamera]._CameraPosition.Z));
+            }
+            else if(e.KeyCode == Keys.D)
+            {
+                Cameras[CurrentCamera].ChangeCameraPosition(new Vector3(Cameras[CurrentCamera]._CameraPosition.X, Cameras[CurrentCamera]._CameraPosition.Y + 0.1f, Cameras[CurrentCamera]._CameraPosition.Z));
+            }
+            else if(e.KeyCode == Keys.S)
+            {
+                Cameras[CurrentCamera].ChangeCameraPosition(new Vector3(Cameras[CurrentCamera]._CameraPosition.X, Cameras[CurrentCamera]._CameraPosition.Y, Cameras[CurrentCamera]._CameraPosition.Z - 0.1f));
+            }
+            mainPicturebox.Refresh();
         }
 
         private void OnTimedEvent(Object source, EventArgs e)
@@ -128,8 +206,12 @@ namespace GK_3D
             else if (MovingBall.ShapeCenter.Y + MovingBall.Radius + BallMove.Y > TableDimensions.Y || MovingBall.ShapeCenter.Y + MovingBall.Radius + BallMove.Y < 0)
                 BallMove.Y *= -1f;
 
-            //Shapes[0].RotateX(0.01f);
             MovingBall.MoveByVector(BallMove);
+            reflector.LightPos = new Vector4(reflector.LightPos.X + BallMove.X, reflector.LightPos.Y + BallMove.Y, reflector.LightPos.Z + BallMove.Z, 1);
+
+            angleZ += 20;
+            RotatingCube.RotateZ(5);
+            reflector.RotateZ(angleZ);
             Cameras[1].ChangeCameraTarget(MovingBall.ShapeCenter);
             Cameras[2].ChangeCameraPosition(new Vector3(Cameras[2]._CameraPosition.X + BallMove.X, Cameras[2]._CameraPosition.Y + BallMove.Y, Cameras[2]._CameraPosition.Z + BallMove.Z));
 

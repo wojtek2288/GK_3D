@@ -11,7 +11,7 @@ namespace GK_3D.Shapes
 {
     public class Sphere : IShape
     {
-        private List<(Vector4 v1, Vector4 v2, Vector4 v3, Color col)> sphere { get; set; }
+        private List<(Vector4 v1, Vector4 v2, Vector4 v3, Color col, Vector4 normal)> sphere { get; set; }
         /// <summary>
         /// Creates 3D mesh of sphere
         /// Center of sphere is in (0, 0, 0)
@@ -31,7 +31,7 @@ namespace GK_3D.Shapes
             Radius = r;
             this._ModelMatrix = new ModelMatrix();
 
-            sphere = new List<(Vector4 v1, Vector4 v2, Vector4 v3, Color col)>();
+            sphere = new List<(Vector4 v1, Vector4 v2, Vector4 v3, Color col, Vector4 normal)>();
             List<Vector4> vertices = new List<Vector4>();
 
             vertices.Add(new Vector4(0f, r, 0f, 1f));
@@ -61,7 +61,7 @@ namespace GK_3D.Shapes
             {
                 int a = i + 1;
                 int b = (i + 1) % meridians + 1;
-                sphere.Add((vertices[0], vertices[b], vertices[a], col));
+                sphere.Add((vertices[0], vertices[b], vertices[a], col, GetNormal(vertices[0], vertices[b], vertices[a])));
             }
 
             for(int j = 0; j < parallels - 2; j++)
@@ -76,8 +76,8 @@ namespace GK_3D.Shapes
                     int b = bStart + i;
                     int b1 = bStart + (i + 1) % meridians;
                     //Add Quad
-                    sphere.Add((vertices[a], vertices[a1], vertices[b1], col));
-                    sphere.Add((vertices[a], vertices[b1], vertices[b], col));
+                    sphere.Add((vertices[a], vertices[a1], vertices[b1], col, GetNormal(vertices[a], vertices[a1], vertices[b1])));
+                    sphere.Add((vertices[a], vertices[b1], vertices[b], col, GetNormal(vertices[a], vertices[b1], vertices[b])));
                 }
             }
 
@@ -85,11 +85,11 @@ namespace GK_3D.Shapes
             {
                 int a = i + meridians * (parallels - 2) + 1;
                 int b = (i + 1)%meridians + meridians*(parallels - 2) + 1;
-                sphere.Add((vertices[vertices.Count - 1], vertices[a], vertices[b], col));
+                sphere.Add((vertices[vertices.Count - 1], vertices[a], vertices[b], col, GetNormal(vertices[vertices.Count - 1], vertices[a], vertices[b])));
             }
         }
 
-        public List<(Vector4 v1, Vector4 v2, Vector4 v3, Color col)> GetShape()
+        public List<(Vector4 v1, Vector4 v2, Vector4 v3, Color col, Vector4 normal)> GetShape()
         {
             return sphere;
         }
@@ -105,6 +105,17 @@ namespace GK_3D.Shapes
             _ModelMatrix.Translate(-1 * Center);
             _ModelMatrix.RotateX(angle);
             _ModelMatrix.Translate(Center);
+        }
+
+        private Vector4 GetNormal(Vector4 v1, Vector4 v2, Vector4 v3)
+        {
+            Vector3 a = new Vector3(v1.X, v1.Y, v1.Z);
+            Vector3 b = new Vector3(v2.X, v2.Y, v2.Z);
+            Vector3 c = new Vector3(v3.X, v3.Y, v3.Z);
+
+            var dir = Vector3.Cross(b - a, c - a);
+            var norm = Vector3.Normalize(dir);
+            return new Vector4(norm.X, norm.Y, norm.Z, 0);
         }
     }
 }
